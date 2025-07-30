@@ -24,8 +24,8 @@
     .stats-container {
       display: flex;
       justify-content: center;
-      flex-wrap: wrap; /* 允许换行，适应小屏幕 */
-      gap: 20px; /* 调整间距 */
+      flex-wrap: wrap;
+      gap: 20px;
       margin-bottom: 20px;
       font-size: 1.2rem;
     }
@@ -34,10 +34,11 @@
       border: 1px solid #4CAF50;
       border-radius: 8px;
       padding: 10px 20px;
-      min-width: 140px; /* 稍微减小最小宽度 */
+      min-width: 140px;
     }
     .game-container {
       display: grid;
+      /* 桌面端默认为5列 */
       grid-template-columns: repeat(5, 1fr);
       gap: 12px;
       max-width: 800px;
@@ -114,6 +115,7 @@
       background: rgba(0, 16, 0, 0.9);
       display: flex;
       justify-content: center;
+      /* 桌面端对齐到底部 */
       align-items: flex-end;
       z-index: 100;
       opacity: 0;
@@ -153,17 +155,36 @@
       transform: scale(1.05);
       box-shadow: 0 0 20px rgba(76, 175, 80, 1);
     }
-    @media (max-width: 768px) {
-      .game-container {
-        grid-template-columns: repeat(4, 1fr);
-        max-width: 600px;
+    
+    /* --- 移动端优化关键代码 --- */
+    @media (max-width: 600px) {
+      body {
+        padding: 10px; /* 减小页面边距 */
       }
-    }
-    @media (max-width: 480px) {
+      .game-title {
+        font-size: 2rem; /* 缩小标题 */
+      }
+      .stats-container {
+        gap: 10px; /* 缩小统计框间距 */
+      }
+      .stat-box {
+        min-width: 120px; /* 允许统计框更小 */
+        padding: 8px 15px;
+        font-size: 1rem;
+      }
       .game-container {
+        /* 在小屏幕上，自动变为3列 */
         grid-template-columns: repeat(3, 1fr);
+        gap: 10px; /* 缩小卡牌间距 */
+        padding: 10px;
+      }
+      .results-overlay {
+        /* 在手机上，让结束框垂直居中，而不是在底部 */
+        align-items: center;
+        padding-bottom: 20px; /* 恢复默认padding */
       }
     }
+    /* --- 优化结束 --- */
   </style>
 </head>
 <body>
@@ -177,7 +198,6 @@
       <div>配对成功</div>
       <div id="matches-count">0</div>
     </div>
-    <!-- 新增的计数器 -->
     <div class="stat-box">
       <div>前6次内配对</div>
       <div id="early-matches-count">0</div>
@@ -194,6 +214,7 @@
   </div>
 
 <script>
+  // JavaScript部分无需改动
   const totalImagesCount = 53;
   const allImageIndexes = Array.from({ length: totalImagesCount }, (_, i) => i + 1);
 
@@ -211,7 +232,7 @@
   const gameState = {
     moves: 0,
     matchedPairs: 0,
-    earlyMatches: 0, // 新增状态：追踪前6次内的配对数
+    earlyMatches: 0,
     flippedCards: new Set(),
     matchedCards: new Set(),
     gameComplete: false
@@ -220,7 +241,6 @@
   const gameBoard = document.getElementById('game-board');
   const movesCount = document.getElementById('moves-count');
   const matchesCount = document.getElementById('matches-count');
-  // 获取新计数器的DOM元素
   const earlyMatchesCount = document.getElementById('early-matches-count');
   const resultsOverlay = document.getElementById('results-overlay');
   const finalMoves = document.getElementById('final-moves');
@@ -240,18 +260,16 @@
 
   function initGame() {
     gameBoard.innerHTML = '';
-    // 重置所有游戏状态
     gameState.moves = 0;
     gameState.matchedPairs = 0;
-    gameState.earlyMatches = 0; // 重置新计数器状态
+    gameState.earlyMatches = 0;
     gameState.flippedCards.clear();
     gameState.matchedCards.clear();
     gameState.gameComplete = false;
 
-    // 重置所有显示
     movesCount.textContent = '0';
     matchesCount.textContent = '0';
-    earlyMatchesCount.textContent = '0'; // 重置新计数器显示
+    earlyMatchesCount.textContent = '0';
     resultsOverlay.classList.remove('active');
 
     const selectedImages = getRandomSample(allImageIndexes, 7);
@@ -325,7 +343,6 @@
       gameState.matchedPairs += newMatches;
       matchesCount.textContent = gameState.matchedPairs;
 
-      // 核心逻辑：只有在翻牌次数不多于6次时，才更新“前6次内配对”计数器
       if (gameState.moves <= 6) {
         gameState.earlyMatches += newMatches;
         earlyMatchesCount.textContent = gameState.earlyMatches;
